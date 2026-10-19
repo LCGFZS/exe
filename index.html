@@ -5,16 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des fichiers du dépôt</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f6f8fa; color: #24292f; }
-        h1 { text-align: center; font-size: 24px; margin-bottom: 20px; }
-        .list-container { background: white; padding: 10px 20px; border: 1px solid #d0d7de; border-radius: 6px; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 600px; 
+            margin: 40px auto; 
+            padding: 20px; 
+            background: #0d1117; /* Fond sombre style GitHub */
+            color: #c9d1d9; /* Texte clair */
+        }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 20px; color: #f0f6fc; }
+        .list-container { 
+            background: #161b22; 
+            padding: 10px 20px; 
+            border: 1px solid #30363d; 
+            border-radius: 6px; 
+        }
         ul { list-style: none; padding: 0; margin: 0; }
-        li { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #d0d7de; }
+        li { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px 0; 
+            border-bottom: 1px solid #21262d; 
+        }
         li:last-child { border-bottom: none; }
-        .filename { font-weight: 600; font-size: 14px; }
-        .btn { background-color: #2ea44f; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 500; display: inline-block; }
-        .btn:hover { background-color: #2c974b; }
-        .status { text-align: center; color: #57606a; font-style: italic; padding: 20px 0; }
+        .filename { font-weight: 600; font-size: 14px; color: #c9d1d9; }
+        .btn { 
+            background-color: #238636; 
+            color: white; 
+            text-decoration: none; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            font-weight: 500; 
+            display: inline-block; 
+        }
+        .btn:hover { background-color: #2ea44f; }
+        .status { text-align: center; color: #8b949e; font-style: italic; padding: 20px 0; }
+        .error { color: #f85149; text-align: center; font-style: italic; padding: 20px 0; }
     </style>
 </head>
 <body>
@@ -27,32 +55,32 @@
     </div>
 
     <script>
+        // --- CONFIGURATION MANUELLE (Évite les erreurs "Failed to fetch") ---
+        const GITHUB_USERNAME = 'VOTRE_PSEUDO'; 
+        const GITHUB_REPO = 'VOTRE_NOM_DE_DEPOT';
+        // ------------------------------------------------------------------
+
         async function loadCurrentRepoFiles() {
             const listElement = document.getElementById('file-list');
             const statusMessage = document.getElementById('status-message');
 
+            // Vérification si les variables n'ont pas été remplies
+            if (GITHUB_USERNAME === 'VOTRE_PSEUDO' || GITHUB_REPO === 'VOTRE_NOM_DE_DEPOT') {
+                statusMessage.className = 'error';
+                statusMessage.innerText = "Erreur : Veuillez remplacer 'VOTRE_PSEUDO' et 'VOTRE_NOM_DE_DEPOT' dans le code JavaScript.";
+                return;
+            }
+
             try {
-                // Détecte automatiquement l'utilisateur et le dépôt depuis l'URL GitHub Pages
-                const hostname = window.location.hostname;
-                const pathSegments = window.location.pathname.split('/').filter(Boolean);
-
-                if (hostname === 'localhost' || window.location.protocol === 'file:') {
-                    statusMessage.innerHTML = "Pour tester en local, vous devez héberger la page en ligne sur GitHub Pages ou renseigner manuellement vos identifiants dans le code.";
-                    return;
-                }
-
-                const username = hostname.split('.')[0];
-                const repo = pathSegments[0];
-
-                // Appel à l'API GitHub
-                const apiUrl = `https://github.com{username}/${repo}/contents/`;
+                // Appel direct et sécurisé à l'API GitHub
+                const apiUrl = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/`;
                 
                 const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error('Impossible de lire le dépôt');
+                if (!response.ok) throw new Error(`Impossible de lire le dépôt (Code: ${response.status})`);
 
                 const items = await response.json();
                 
-                // Filtre pour ne garder que les fichiers (pas les dossiers) et exclure index.html
+                // Filtre pour garder tous les fichiers sauf index.html
                 const files = items.filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html');
 
                 if (files.length === 0) {
@@ -63,7 +91,7 @@
                 // Vide le message de chargement
                 listElement.innerHTML = '';
 
-                // Génère dynamiquement la liste de tous les fichiers
+                // Génère la liste des fichiers
                 files.forEach(file => {
                     const li = document.createElement('li');
                     li.innerHTML = `
@@ -74,8 +102,8 @@
                 });
 
             } catch (error) {
+                statusMessage.className = 'error';
                 statusMessage.innerText = `Erreur lors du chargement : ${error.message}`;
-                statusMessage.style.color = '#cf222e';
             }
         }
 
