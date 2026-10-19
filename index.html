@@ -10,7 +10,7 @@
             max-width: 600px; 
             margin: 40px auto; 
             padding: 20px; 
-            background: #0d1117; /* Fond sombre style GitHub */
+            background: #0d1117; /* Fond sombre GitHub */
             color: #c9d1d9; /* Texte clair */
         }
         h1 { text-align: center; font-size: 24px; margin-bottom: 20px; color: #f0f6fc; }
@@ -55,32 +55,24 @@
     </div>
 
     <script>
-        // --- CONFIGURATION MANUELLE (Évite les erreurs "Failed to fetch") ---
+        // Configuration injectée pour votre dépôt lcgfzs/exe
         const GITHUB_USERNAME = 'lcgfzs'; 
         const GITHUB_REPO = 'exe';
-        // ------------------------------------------------------------------
 
         async function loadCurrentRepoFiles() {
             const listElement = document.getElementById('file-list');
             const statusMessage = document.getElementById('status-message');
 
-            // Vérification si les variables n'ont pas été remplies
-            if (GITHUB_USERNAME === 'VOTRE_PSEUDO' || GITHUB_REPO === 'VOTRE_NOM_DE_DEPOT') {
-                statusMessage.className = 'error';
-                statusMessage.innerText = "Erreur : Veuillez remplacer 'VOTRE_PSEUDO' et 'VOTRE_NOM_DE_DEPOT' dans le code JavaScript.";
-                return;
-            }
-
             try {
-                // Appel direct et sécurisé à l'API GitHub
+                // Utilisation de l'API GitHub avec vos identifiants réels
                 const apiUrl = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/`;
                 
                 const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`Impossible de lire le dépôt (Code: ${response.status})`);
+                if (!response.ok) throw new Error(`Impossible de récupérer les fichiers (Statut : ${response.status})`);
 
                 const items = await response.json();
                 
-                // Filtre pour garder tous les fichiers sauf index.html
+                // On isole tous les fichiers, en ignorant l'index.html lui-même
                 const files = items.filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html');
 
                 if (files.length === 0) {
@@ -88,14 +80,14 @@
                     return;
                 }
 
-                // Vide le message de chargement
+                // On efface le message de chargement initial
                 listElement.innerHTML = '';
 
-                // Génère la liste des fichiers
+                // Génération de la liste dynamique
                 files.forEach(file => {
                     const li = document.createElement('li');
                     li.innerHTML = `
-                        <span class="filename">📄 ${file.name}</span>
+                        <span class="filename">📦 ${file.name}</span>
                         <a href="${file.download_url}" class="btn" download>Télécharger</a>
                     `;
                     listElement.appendChild(li);
@@ -103,7 +95,7 @@
 
             } catch (error) {
                 statusMessage.className = 'error';
-                statusMessage.innerText = `Erreur lors du chargement : ${error.message}`;
+                statusMessage.innerText = `Erreur : ${error.message}. Assurez-vous que le dépôt est bien public.`;
             }
         }
 
