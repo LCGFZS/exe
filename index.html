@@ -41,65 +41,35 @@
             display: inline-block; 
         }
         .btn:hover { background-color: #2ea44f; }
-        .status { text-align: center; color: #8b949e; font-style: italic; padding: 20px 0; }
-        .error { color: #f85149; text-align: center; font-style: italic; padding: 20px 0; }
     </style>
 </head>
 <body>
 
     <h1>Fichiers disponibles</h1>
     <div class="list-container">
-        <ul id="file-list">
-            <li class="status" id="status-message">Détection des fichiers en cours...</li>
+        <ul>
+            autoclicker.exe
+            <li>
+                <span class="filename">📦 auto clicker.exe</span>
+                <a href="auto clicker.exe" class="btn" download>Télécharger</a>
+            </li>
+            macro.part_0
+            <li>
+                <span class="filename">📦 macro.part_0</span>
+                <a href="macro.part_0" class="btn" download>Télécharger</a>
+            </li>
+            macro.part_1
+            <li>
+                <span class="filename">📦 macro.part_1</span>
+                <a href="macro.part_1" class="btn" download>Télécharger</a>
+            </li>
+            README.md
+            <li>
+                <span class="filename">📦 README.md</span>
+                <a href="auto README.md" class="btn" download>Télécharger</a>
+            </li>
         </ul>
     </div>
 
-    <script>
-        // Configuration fixe pour votre compte
-        const GITHUB_USERNAME = 'lcgfzs'; 
-        const GITHUB_REPO = 'exe';
-
-        async function loadCurrentRepoFiles() {
-            const listElement = document.getElementById('file-list');
-            const statusMessage = document.getElementById('status-message');
-
-            try {
-                // Construction propre de l'URL d'API
-                const apiUrl = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/`;
-                
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`Erreur API GitHub (Statut : ${response.status})`);
-
-                const items = await response.json();
-                
-                // On isole tous les fichiers, en ignorant l'index.html
-                const files = items.filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html');
-
-                if (files.length === 0) {
-                    statusMessage.innerText = 'Aucun fichier disponible dans ce dépôt.';
-                    return;
-                }
-
-                // Supprime le message de chargement
-                listElement.innerHTML = '';
-
-                // Génération de la liste
-                files.forEach(file => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <span class="filename">📦 ${file.name}</span>
-                        <a href="${file.download_url}" class="btn" download>Télécharger</a>
-                    `;
-                    listElement.appendChild(li);
-                });
-
-            } catch (error) {
-                statusMessage.className = 'error';
-                statusMessage.innerText = `Erreur : ${error.message}`;
-            }
-        }
-
-        loadCurrentRepoFiles();
-    </script>
 </body>
 </html>
