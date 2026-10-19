@@ -55,7 +55,7 @@
     </div>
 
     <script>
-        // Configuration injectée pour votre dépôt lcgfzs/exe
+        // Configuration fixe pour votre compte
         const GITHUB_USERNAME = 'lcgfzs'; 
         const GITHUB_REPO = 'exe';
 
@@ -64,15 +64,15 @@
             const statusMessage = document.getElementById('status-message');
 
             try {
-                // Utilisation de l'API GitHub avec vos identifiants réels
+                // Construction propre de l'URL d'API
                 const apiUrl = `https://github.com{GITHUB_USERNAME}/${GITHUB_REPO}/contents/`;
                 
                 const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`Impossible de récupérer les fichiers (Statut : ${response.status})`);
+                if (!response.ok) throw new Error(`Erreur API GitHub (Statut : ${response.status})`);
 
                 const items = await response.json();
                 
-                // On isole tous les fichiers, en ignorant l'index.html lui-même
+                // On isole tous les fichiers, en ignorant l'index.html
                 const files = items.filter(item => item.type === 'file' && item.name.toLowerCase() !== 'index.html');
 
                 if (files.length === 0) {
@@ -80,10 +80,10 @@
                     return;
                 }
 
-                // On efface le message de chargement initial
+                // Supprime le message de chargement
                 listElement.innerHTML = '';
 
-                // Génération de la liste dynamique
+                // Génération de la liste
                 files.forEach(file => {
                     const li = document.createElement('li');
                     li.innerHTML = `
@@ -95,7 +95,7 @@
 
             } catch (error) {
                 statusMessage.className = 'error';
-                statusMessage.innerText = `Erreur : ${error.message}. Assurez-vous que le dépôt est bien public.`;
+                statusMessage.innerText = `Erreur : ${error.message}`;
             }
         }
 
