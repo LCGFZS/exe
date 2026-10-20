@@ -43,6 +43,6 @@ $bat = @(
     "echo $name recompose."
 ) -join "`r`n"
 $oem = [Text.Encoding]::GetEncoding([Globalization.CultureInfo]::CurrentCulture.TextInfo.OEMCodePage)
-[IO.File]::WriteAllText((Join-Path $dir "${base}_recompose.bat"), $bat, $oem)
+[IO.File]::WriteAllText((Join-Path $dir "recompiler_${base}.bat"), $bat, $oem)
 
-Write-Host "Terminé : $($parts.Count) partie(s) + ${base}_recompose.bat" -ForegroundColor Green
+Write-Host "Terminé : $($parts.Count) partie(s) + recompiler_${base}.bat" -ForegroundColor Green
