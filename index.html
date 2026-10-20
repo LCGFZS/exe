@@ -1,83 +1,112 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des fichiers du dépôt</title>
-    <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            max-width: 600px; 
-            margin: 40px auto; 
-            padding: 20px; 
-            background: #0d1117; /* Fond sombre GitHub */
-            color: #c9d1d9; /* Texte clair */
-        }
-        h1 { text-align: center; font-size: 24px; margin-bottom: 20px; color: #f0f6fc; }
-        .list-container { 
-            background: #161b22; 
-            padding: 10px 20px; 
-            border: 1px solid #30363d; 
-            border-radius: 6px; 
-        }
-        ul { list-style: none; padding: 0; margin: 0; }
-        li { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 16px 0; 
-            border-bottom: 1px solid #21262d; 
-        }
-        li:last-child { border-bottom: none; }
-        .filename { font-weight: 600; font-size: 14px; color: #c9d1d9; }
-        .btn { 
-            background-color: #238636; 
-            color: white; 
-            text-decoration: none; 
-            padding: 6px 12px; 
-            border-radius: 6px; 
-            font-size: 14px; 
-            font-weight: 500; 
-            display: inline-block; 
-        }
-        .btn:hover { background-color: #2ea44f; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fichiers disponibles</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 40px 16px;
+        background: #0d1017;
+        color: #c9d1d9;
+        font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    h1 { text-align: center; color: #fff; margin: 0 0 32px; }
+    .list-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 8px 20px;
+    }
+    ul { list-style: none; margin: 0; padding: 0; }
+    .list-container > ul > li { padding: 16px 0; border-bottom: 1px solid #21262d; }
+    .list-container > ul > li:last-child { border-bottom: none; }
+    li, summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+    .filename { font-weight: 600; font-size: 14px; }
+    .btn {
+        background: #238636;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font: 600 14px inherit;
+        font-family: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .btn:hover { background: #2ea043; }
+    .btn:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+
+    .dropdown { width: 100%; }
+    .dropdown summary { cursor: pointer; list-style: none; }
+    .dropdown summary::-webkit-details-marker { display: none; }
+    .dropdown summary .filename::before { content: "▸ "; }
+    .dropdown[open] summary .filename::before { content: "▾ "; }
+    .sublist { margin-top: 12px; }
+    .sublist li { padding: 8px 0 8px 20px; }
+</style>
 </head>
 <body>
 
-    <h1>Fichiers disponibles</h1>
-    <div class="list-container">
-        <ul>
-            <li>
-                <span class="filename">ReadMe pour spécificités</span>
-                <a href="README.md" class="btn" download>Télécharger</a>
-            </li>
-            <li>
-                <span class="filename">Script Powershell pour split un fichier</span>
-                <a href="split.ps1" class="btn" download>Télécharger</a>
-            </li>
-
-            <li>
-                <span class="filename">autoclicker</span>
-                <a href="autoclicker.exe" class="btn" download>Télécharger</a>
-            </li>
-            <li>
+<h1>Fichiers disponibles</h1>
+<div class="list-container">
+    <ul>
+        <li>
+            <span class="filename">ReadMe pour spécificités</span>
+            <a href="README.md" class="btn" download>Télécharger</a>
+        </li>
+        <li>
+            <span class="filename">Script Powershell pour split un fichier</span>
+            <a href="split.ps1" class="btn" download>Télécharger</a>
+        </li>
+        <li>
+            <span class="filename">autoclicker</span>
+            <a href="autoclicker.exe" class="btn" download>Télécharger</a>
+        </li>
+        <li>
             <details class="dropdown">
-                <summary class="filename">macro.exe</summary>
+                <summary>
+                    <span class="filename">macro.exe</span>
+                    <button type="button" class="btn" id="dl-all">Tout Télécharger</button>
+                </summary>
                 <ul class="sublist">
                     <li>
                         <span class="filename">Partie 1</span>
-                        <a href="macro.part_0" class="btn" download>Télécharger</a>
+                        <a href="macro.exe/macro.part_0" class="btn" download>Télécharger</a>
                     </li>
                     <li>
                         <span class="filename">Partie 2</span>
-                        <a href="macro.part_1" class="btn" download>Télécharger</a>
+                        <a href="macro.exe/macro.part_1" class="btn" download>Télécharger</a>
+                    </li>
+                    <li>
+                        <span class="filename">script de recompilage</span>
+                        <a href="macro.exe/script_compilage.bat" class="btn" download>Télécharger</a>
                     </li>
                 </ul>
             </details>
         </li>
-        </ul>
-    </div>
+    </ul>
+</div>
+
+<script>
+document.getElementById('dl-all').addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.sublist a[download]').forEach((a, i) => {
+        setTimeout(() => a.click(), i * 300);
+    });
+});
+</script>
 
 </body>
 </html>
