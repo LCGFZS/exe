@@ -45,6 +45,7 @@
         white-space: nowrap;
     }
     .btn:hover { background: #2ea043; }
+    .btn:disabled { background: #2ea043; opacity: .6; cursor: wait; }
     .btn:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
 
     .dropdown { width: 100%; }
@@ -98,13 +99,47 @@
     </ul>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
-document.getElementById('dl-all').addEventListener('click', e => {
+document.getElementById('dl-all').addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    document.querySelectorAll('.sublist a[download]').forEach((a, i) => {
-        setTimeout(() => a.click(), i * 300);
-    });
+
+    const btn = e.currentTarget;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Préparation...';
+
+    try {
+        const files = {
+            'macro_p1': 'macro.exe/macro_p1',
+            'macro_p2': 'macro.exe/macro_p2',
+            'recompiler_macro.bat': 'macro.exe/recompiler_macro.bat'
+        };
+
+        const zip = new JSZip();
+        const folder = zip.folder('macro.exe');
+
+        for (const [name, url] of Object.entries(files)) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Échec du téléchargement : ${name}`);
+            folder.file(name, await res.blob());
+        }
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(content);
+        a.download = 'macro.exe.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+    } catch (err) {
+        alert('Erreur lors de la préparation du zip : ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 });
 </script>
 
