@@ -344,17 +344,94 @@ try {
     Invoke-Step 'forticlient' 'FortiClient VPN' {
         $paths = @('C:\Program Files\Fortinet\FortiClient\FortiClient.exe','C:\Program Files\Fortinet\FortiClient\FortiClientConsole.exe')
         $names = @('FortiClient VPN*','Fortinet FortiClient VPN*','FortiClient*')
-        # L'installateur Fortinet est relance pour appliquer la version courante disponible.
-        $installer = Join-Path $WorkDir 'FortiClientVPNOnlineInstaller.exe'
-        Get-RemoteFile -Url $Urls.Forti -OutFile $installer -MinimumBytes 500KB | Out-Null
-        Assert-Authenticode -Path $installer -ExpectedPublisher 'Fortinet'
+
+        # Le lien public Fortinet fournit le downloader en ligne, pas le paquet complet.
+        # Le downloader extrait FortiClientVPN.exe dans le Temp de l'utilisateur.
+        if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+            throw 'LOCALAPPDATA est indisponible : impossible de localiser le paquet FortiClient extrait.'
+        }
+        $downloader = Join-Path $WorkDir 'FortiClientVPNOnlineInstaller.exe'
+        $payload = Join-Path $env:LOCALAPPDATA 'Temp\FortiClientVPN.exe'
         $log = Join-Path $LogDir 'FortiClientVPN-install.log'
-        $proc = Start-Process -FilePath $installer -ArgumentList "/quiet /norestart /log `"$log`"" -Wait -PassThru
+
+        # Evite de supprimer un paquet qui serait deja utilise par une autre installation.
+        $existingPayloadProcesses = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object { $_.ExecutablePath -and ($_.ExecutablePath -ieq $payload) })
+        if ($existingPayloadProcesses.Count -gt 0) {
+            throw 'FortiClientVPN.exe est deja en cours d execution. Fermer cette installation avant de relancer le script.'
+        }
+        if (Test-Path -LiteralPath $payload) {
+            Remove-Item -LiteralPath $payload -Force -ErrorAction Stop
+        }
+
+        Get-RemoteFile -Url $Urls.Forti -OutFile $downloader -MinimumBytes 500KB | Out-Null
+        Assert-Authenticode -Path $downloader -ExpectedPublisher 'Fortinet'
+
+        Write-Host 'Lancement du downloader Fortinet pour recuperer le paquet complet...' -ForegroundColor Cyan
+        $downloaderProcess = Start-Process -FilePath $downloader -WindowStyle Hidden -PassThru
+        $deadline = (Get-Date).AddMinutes(15)
+        $lastLength = -1L
+        $stableCount = 0
+        $payloadReady = $false
+
+        # Attend la fin de l'extraction : taille superieure a 50 Mo et stable
+        # pendant plusieurs controles successifs.
+        do {
+            if (Test-Path -LiteralPath $payload) {
+                $payloadInfo = Get-Item -LiteralPath $payload -ErrorAction SilentlyContinue
+                if ($payloadInfo -and $payloadInfo.Length -ge 50MB) {
+                    if ($payloadInfo.Length -eq $lastLength) { $stableCount++ }
+                    else { $stableCount = 0; $lastLength = $payloadInfo.Length }
+                    if ($stableCount -ge 3) { $payloadReady = $true; break }
+                }
+            }
+            Start-Sleep -Seconds 2
+        } while ((Get-Date) -lt $deadline)
+
+        if (-not $payloadReady) {
+            if ($downloaderProcess -and -not $downloaderProcess.HasExited) {
+                Stop-Process -Id $downloaderProcess.Id -Force -ErrorAction SilentlyContinue
+            }
+            throw 'Le downloader Fortinet n a pas extrait FortiClientVPN.exe dans le delai de 15 minutes. Aucune installation interactive ne sera lancee.'
+        }
+
+        # Le downloader peut avoir demarre son propre assistant apres extraction.
+        # On arrete uniquement les processus issus de ce nouveau paquet, puis on
+        # relance le meme executable avec les options silencieuses confirmees par son aide.
+        $processSnapshot = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
+        $newPayloadProcesses = @($processSnapshot | Where-Object {
+            $_.ExecutablePath -and ($_.ExecutablePath -ieq $payload)
+        })
+        $rootProcessIds = @([int]$downloaderProcess.Id) + @($newPayloadProcesses | ForEach-Object { [int]$_.ProcessId })
+        $descendantIds = @()
+        $frontierIds = @($rootProcessIds)
+        while ($frontierIds.Count -gt 0) {
+            $nextIds = @($processSnapshot | Where-Object {
+                $frontierIds -contains [int]$_.ParentProcessId
+            } | ForEach-Object { [int]$_.ProcessId })
+            foreach ($processId in $nextIds) {
+                if ($descendantIds -notcontains $processId) { $descendantIds += $processId }
+            }
+            $frontierIds = @($nextIds)
+        }
+        foreach ($processId in ($descendantIds | Select-Object -Unique)) {
+            Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+        }
+        foreach ($processId in ($rootProcessIds | Select-Object -Unique)) {
+            Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+        }
+        Start-Sleep -Seconds 2
+
+        if (-not (Test-Path -LiteralPath $payload)) { throw 'Le paquet FortiClient a disparu apres l arret du downloader.' }
+        Assert-Authenticode -Path $payload -ExpectedPublisher 'Fortinet'
+
+        Write-Host 'Installation silencieuse du paquet FortiClient VPN...' -ForegroundColor Cyan
+        $proc = Start-Process -FilePath $payload -ArgumentList "-quiet -norestart -log `"$log`"" -Wait -PassThru
         Add-Content -Path $log -Value "`r`nCode de sortie : $($proc.ExitCode)" -Encoding UTF8
         if ($proc.ExitCode -in @(3010,1641)) { $script:RebootNeeded = $true }
         elseif ($proc.ExitCode -ne 0) { throw "FortiClient a retourne $($proc.ExitCode). Journal : $log" }
         if (-not (Wait-ForInstalled -NamePattern $names -Paths $paths -TimeoutMinutes 15)) { throw "FortiClient non detecte apres installation. Journal : $log" }
-        "FortiClient VPN detecte ; journal : $log."
+        "FortiClient VPN detecte apres installation silencieuse ; journal : $log."
     }
 
     Invoke-Step 'teamviewer' 'TeamViewer QuickSupport' {
